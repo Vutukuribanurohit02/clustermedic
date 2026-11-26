@@ -1,1 +1,0 @@
-{"id": "inj-20261126-011845-b131", "ts": "2026-11-26T01:18:45.986265+00:00", "fault": "node_drain", "target": "node", "node": "c2", "gpu": null, "root_cause": "node_drained", "runbook": "RB-001"}

@@ -27,11 +27,23 @@ def slurm_admin(*args: str) -> str:
 
 
 def container_for_node(node: str) -> str:
-    """Find the worker container whose hostname is `node` (e.g. c1 -> slurm-cpu-worker-1)."""
+    """Find the worker container behind a Slurm node (e.g. c1 -> slurm-cpu-worker-1).
+
+    Slurm's NodeAddr/NodeHostName may be an IP, a container name or a container hostname,
+    so match on any of those.
+    """
+    info = slurm_admin("scontrol", "show", "node", node, "-o")
+    wanted = {node}
+    for field in info.split():
+        if field.startswith(("NodeAddr=", "NodeHostName=")):
+            wanted.add(field.split("=", 1)[1])
     for name in sh(["docker", "ps", "-a", "--format", "{{.Names}}"]).splitlines():
-        if sh(["docker", "inspect", "-f", "{{.Config.Hostname}}", name], check=False) == node:
+        ids = sh(["docker", "inspect", "-f",
+                  "{{.Config.Hostname}} {{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}",
+                  name], check=False).split()
+        if wanted & ({name} | set(ids)):
             return name
-    raise InjectError(f"no container with hostname {node!r}")
+    raise InjectError(f"no container found for node {node!r} (looked for {sorted(wanted)})")
 
 
 # ---------- GPU exporter state file ----------
