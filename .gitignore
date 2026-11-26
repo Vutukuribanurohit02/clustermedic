@@ -8,3 +8,4 @@ eval/.active_faults.json
 infra/redfish/mockups/
 *.json.orig
 eval/injections.jsonl
+data/

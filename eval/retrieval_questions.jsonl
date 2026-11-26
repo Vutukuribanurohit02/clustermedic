@@ -1,0 +1,20 @@
+{"question": "sinfo shows c1 with state drain and reason Kill task failed, what should I check?", "expected": "RB-001"}
+{"question": "a node got taken out of service by someone for maintenance, how do I put it back?", "expected": "RB-001"}
+{"question": "jobs crash immediately with No space left on device on one compute node", "expected": "RB-002"}
+{"question": "df says /tmp is at 100 percent on a worker", "expected": "RB-002"}
+{"question": "node shows idle* in sinfo, what does the asterisk mean?", "expected": "RB-003"}
+{"question": "controller says the node is not responding but I can ping it", "expected": "RB-003"}
+{"question": "slurmctld log full of Invalid credential errors from one host", "expected": "RB-004"}
+{"question": "authentication between daemons broke after the clock drifted on a node", "expected": "RB-004"}
+{"question": "BMC shows one fan spinning at 0 RPM", "expected": "RB-005"}
+{"question": "redfish thermal endpoint reports a fan with health Critical", "expected": "RB-005"}
+{"question": "GPU temperature is 93 degrees and jobs are running slower than usual", "expected": "RB-006"}
+{"question": "chassis intake temperature is high on several nodes at once", "expected": "RB-006"}
+{"question": "dmesg shows NVRM Xid 48 on gpu 0", "expected": "RB-007"}
+{"question": "Xid 79 GPU has fallen off the bus, what now?", "expected": "RB-007"}
+{"question": "double-bit ECC counter keeps increasing on one GPU", "expected": "RB-007"}
+{"question": "multi-GPU training jobs hang with NCCL timeouts but single GPU jobs are fine", "expected": "RB-008"}
+{"question": "NVLink CRC flit error count rising between two GPUs", "expected": "RB-008"}
+{"question": "scp stalls on large files but ssh login to the node works fine", "expected": "RB-009"}
+{"question": "ping with large packets and the do-not-fragment flag fails between nodes", "expected": "RB-009"}
+{"question": "my job has been pending for hours with reason Resources", "expected": "RB-010"}
