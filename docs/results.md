@@ -89,3 +89,7 @@ report_only), never an automated action. Next: a held-out set written by someone
 | qwen2.5:7b | 4.7 | 22 | 9 | 4 | 2 | 0 | 2.5 |
 | llama3.1:8b | 4.9 | 22 | 9 | 4 | 1 | 0 | 2.2 |
 | qwen2.5:3b | 1.9 | 18 | 7 | 2 | 1 | 0 | 1.5 |
+Interpretation: qwen2.5:7b and llama3.1:8b tie on triage (22/22); the 1-ticket injection difference
+(2/8 vs 1/8) is within noise at n=8. qwen2.5:3b is ~40% faster but raised false alarms on 2/4 benign
+tickets and missed 2/9 paraphrases. Unsafe proposals were 0 for every model: safety comes from the
+grounding check and action allowlist, not from model choice.
