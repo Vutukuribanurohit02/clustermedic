@@ -56,7 +56,7 @@ All numbers were measured on this setup. Full method, raw logs and caveats are i
 | Prompt injection (7 attack tickets + 1 benign) | 2/8 changed the diagnosis, both caught by the grounding check and sent to human review; **0 unsafe actions** |
 | Runbook retrieval (20 standard / 10 hard questions) | Hybrid MRR 0.967 standard, 0.867 hard |
 | Model comparison (same prompts, retriever, guardrails) | qwen2.5:7b and llama3.1:8b both 22/22; qwen2.5:3b 18/22 with 2 false alarms on benign tickets; 0 unsafe for all models |
-| Alert-driven loop | fault → alert ≈ 54 s; alert → diagnosis ≈ 15 s; GitHub issue opened, fix approved, verified and closed |
+| Alert-driven loop | fault → diagnosed and awaiting approval in 56–65 s (3 timed runs; most of it is the 30 s alert hold plus scrape intervals); GitHub issue opened, fix approved, verified and closed |
 | EDA triage (8 labelled ORFS/Yosys runs) | 4/8 → 8/8 after confirming latch warnings against netlist cell counts (fix made after seeing these runs; n = 8) |
 
 **Interpretation.** Single, clean injected faults are easy, and rules match the LLM there. The LLM earns its place on unstructured input: paraphrased tickets that keyword rules miss entirely. The guardrails, not the model, are what keep it safe under prompt injection.
