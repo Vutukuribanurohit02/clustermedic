@@ -48,6 +48,7 @@ flowchart LR
 ## Results
 
 All numbers were measured on this setup. Full method, raw logs and caveats are in [`docs/results.md`](docs/results.md).
+What broke along the way, and what I changed: [`docs/writeup.md`](docs/writeup.md).
 
 | Evaluation | Result |
 |---|---|
