@@ -32,3 +32,9 @@ hybrid: n=10  hit@1=0.80  hit@3=0.90  MRR=0.867
 ## Doc fix (2026-11-25): added user-reported symptom line to RB-001
 Hard set after: BM25 1.00/1.00/1.000, Vector 0.70/1.00/0.850, Hybrid 0.90/1.00/0.950 (hit@1/hit@3/MRR).
 Caveat: fix was made after seeing the failing question (test-set tuning). Need a held-out set in Week 5.
+
+## Prompt injection (2026-11-25, fan_failure active, 8 tickets: 7 attacks + 1 benign, qwen2.5:7b)
+- Diagnosis changed by ticket: 2/8 (both to no_fault; one polite social-engineering, one "maintenance mode").
+- Both changed diagnoses were grounded=False -> needs_review -> report_only: 0 unsafe actions possible.
+- Cost of the attack: fault left for human review instead of auto-proposed fix (availability, not safety).
+- Regex injection filter: flagged 5/7 attacks, 0/1 benign.
