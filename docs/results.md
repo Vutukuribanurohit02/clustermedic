@@ -69,3 +69,12 @@ Interpretation: every incident has one clean, unambiguous anomaly, so a keyword 
 matches the LLM. 1 incident errored (laptop sleep stalled the quiet-wait), reported and excluded.
 Next: a harder scenario set (compound faults, red herrings, misleading tickets) to test whether the
 LLM adds value over rules.
+## Ticket-only triage (pre-registered set, 22 tickets, model qwen2.5:7b)
+| Ticket kind | n | LLM correct | Rules correct |
+|---|---|---|---|
+| literal | 9 | 9 | 9 |
+| paraphrased | 9 | 9 | 0 |
+| benign | 4 | 4 | 4 |
+| **all** | 22 | 22 | 13 |
+
+State-changing actions proposed: 0 (expected 0: ticket-only diagnoses are always needs_review -> report_only)
