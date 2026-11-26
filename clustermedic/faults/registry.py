@@ -28,11 +28,17 @@ def _resume(u):
 def _slurmd_down(ctx):
     c = b.container_for_node(ctx["node"])
     b.sh(["docker", "stop", c])
+    # Slurm only flags the node ("idle*") after it misses heartbeats; measured ~1.5 min here.
+    # Wait so the symptom exists before anyone starts diagnosing.
+    b.wait_for(lambda: b.slurm_admin("sinfo", "-h", "-n", ctx["node"], "-o", "%t").endswith("*"),
+               timeout_s=360, what=f"{ctx['node']} to show as not responding")
     return {"node": ctx["node"], "container": c}
 
 def _slurmd_up(u):
     b.sh(["docker", "start", u["container"]])
-    b.slurm_admin("scontrol", "update", f"nodename={u['node']}", "state=resume")  # may already be idle
+    # The node often re-registers as idle by itself; resume only matters if it is still down.
+    b.sh(["docker", "exec", b.SLURM_CTL, "scontrol", "update", f"nodename={u['node']}",
+          "state=resume"], check=False)
 
 def _saturate(ctx):
     blocker = b.slurm_admin("sbatch", "--parsable", "-N2", "--exclusive", "-J", "sim_long",

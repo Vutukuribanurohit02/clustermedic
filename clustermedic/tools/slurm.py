@@ -11,12 +11,16 @@ def parse_sinfo(text: str) -> list[dict]:
     """Parse `sinfo -h -N -o '%N|%P|%t|%c|%m|%E'` output."""
     nodes = []
     for line in text.strip().splitlines():
-        name, partition, state, cpus, mem, reason = line.split("|", 5)
+        name, partition, raw_state, cpus, mem, reason = line.split("|", 5)
+        # sinfo appends "*" when the controller cannot reach slurmd (e.g. "idle*").
+        responding = not raw_state.endswith("*")
+        state = raw_state.rstrip("*~#!%$@^-")
         nodes.append({
             "node": name,
             "partition": partition.rstrip("*"),
             "state": state,
-            "healthy": state in HEALTHY_STATES,
+            "responding": responding,
+            "healthy": responding and state in HEALTHY_STATES,
             "cpus": int(cpus),
             "memory_mb": int(mem),
             "reason": None if reason in ("none", "") else reason,

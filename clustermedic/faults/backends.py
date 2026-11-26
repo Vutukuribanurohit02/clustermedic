@@ -2,6 +2,8 @@
 import json
 import shutil
 import subprocess
+import time
+import urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -19,6 +21,19 @@ def sh(cmd: list[str], check: bool = True) -> str:
     if check and out.returncode != 0:
         raise InjectError(f"{' '.join(cmd)} failed: {out.stderr.strip() or out.stdout.strip()}")
     return out.stdout.strip()
+
+
+def wait_for(check, timeout_s: int, what: str, interval_s: int = 5) -> None:
+    """Poll check() until it returns True, or fail after timeout_s."""
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        try:
+            if check():
+                return
+        except InjectError:
+            pass
+        time.sleep(interval_s)
+    raise InjectError(f"timed out after {timeout_s}s waiting for {what}")
 
 
 def slurm_admin(*args: str) -> str:
@@ -70,6 +85,20 @@ def gpu_state_clear(key: str) -> None:
 
 # ---------- Redfish mockup editing ----------
 
+def restart_redfish(timeout_s: int = 30) -> None:
+    """Restart the mockup server and wait until it answers again."""
+    sh(["docker", "restart", "redfish"])
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        try:
+            with urllib.request.urlopen("http://localhost:8000/redfish/v1", timeout=2) as r:
+                if r.status == 200:
+                    return
+        except OSError:
+            pass
+        time.sleep(1)
+    raise InjectError(f"redfish did not come back within {timeout_s}s")
+
 def _thermal_file(mockup: Path = None) -> Path:
     mockup = mockup or REDFISH_MOCKUP
     hits = list(mockup.rglob("Chassis/1U/Thermal/index.json"))
@@ -88,7 +117,7 @@ def redfish_edit_thermal(edit, mockup: Path = None, restart: bool = True) -> Non
     edit(doc)
     f.write_text(json.dumps(doc, indent=4))
     if restart:
-        sh(["docker", "restart", "redfish"])
+        restart_redfish()
 
 
 def redfish_restore_thermal(mockup: Path = None, restart: bool = True) -> None:
@@ -98,4 +127,4 @@ def redfish_restore_thermal(mockup: Path = None, restart: bool = True) -> None:
         shutil.copy(orig, f)
         orig.unlink()
     if restart:
-        sh(["docker", "restart", "redfish"])
+        restart_redfish()

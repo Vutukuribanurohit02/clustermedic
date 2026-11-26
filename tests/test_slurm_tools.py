@@ -9,8 +9,8 @@ from clustermedic.tools.slurm import parse_kv, parse_sinfo, parse_squeue
 def test_parse_sinfo_healthy_and_drained():
     text = "c1|cpu*|drain|2|1000|week1-test\nc2|cpu*|idle|2|1000|none\n"
     nodes = parse_sinfo(text)
-    assert nodes[0] == {"node": "c1", "partition": "cpu", "state": "drain", "healthy": False,
-                        "cpus": 2, "memory_mb": 1000, "reason": "week1-test"}
+    assert nodes[0] == {"node": "c1", "partition": "cpu", "state": "drain", "responding": True,
+                        "healthy": False, "cpus": 2, "memory_mb": 1000, "reason": "week1-test"}
     assert nodes[1]["healthy"] is True and nodes[1]["reason"] is None
 
 
@@ -27,6 +27,12 @@ def test_parse_squeue():
     jobs = parse_squeue("12|alice|PENDING|cpu||Resources\n13|bob|RUNNING|cpu|c1|None\n")
     assert jobs[0]["nodes"] is None and jobs[0]["reason"] == "Resources"
     assert jobs[1]["nodes"] == "c1" and jobs[1]["reason"] is None
+
+
+def test_parse_sinfo_not_responding():
+    # Seen live: stopped slurmd shows as "idle*" for minutes before Slurm marks it down.
+    node = parse_sinfo("c2|cpu*|idle*|20|9942|none\n")[0]
+    assert node["state"] == "idle" and node["responding"] is False and node["healthy"] is False
 
 
 @pytest.mark.parametrize("argv", [

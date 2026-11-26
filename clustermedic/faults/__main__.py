@@ -46,14 +46,23 @@ def cmd_inject(a):
 def cmd_clear(a):
     active = _active()
     ids = list(active) if a.all else [a.id]
+    failed = 0
     for fid in ids:
-        entry = active.pop(fid, None)
+        entry = active.get(fid)
         if entry is None:
             print(f"unknown id {fid}")
             continue
-        FAULTS[entry["fault"]].clear(entry["undo"])
+        try:
+            FAULTS[entry["fault"]].clear(entry["undo"])
+        except Exception as e:  # keep clearing the rest; report what failed
+            failed += 1
+            print(f"FAILED to clear {entry['fault']} ({fid}): {e}")
+            continue
+        active.pop(fid)
+        _save_active(active)
         print(f"cleared {entry['fault']} ({fid})")
-    _save_active(active)
+    if failed:
+        raise SystemExit(f"{failed} fault(s) could not be cleared; still listed in `status`")
 
 
 def cmd_status(_):
