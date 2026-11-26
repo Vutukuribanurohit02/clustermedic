@@ -28,3 +28,7 @@ hybrid: n=10  hit@1=0.80  hit@3=0.90  MRR=0.867
         miss (rank 6): expected RB-001 :: cancelled jobs never actually die on c2 and now the node is out of the pool
         miss (rank 2): expected RB-006 :: fans look fine but the BMC says CPU1 is above its critical threshold
 ```
+
+## Doc fix (2026-11-25): added user-reported symptom line to RB-001
+Hard set after: BM25 1.00/1.00/1.000, Vector 0.70/1.00/0.850, Hybrid 0.90/1.00/0.950 (hit@1/hit@3/MRR).
+Caveat: fix was made after seeing the failing question (test-set tuning). Need a held-out set in Week 5.
