@@ -1,0 +1,20 @@
+[project]
+name = "clustermedic"
+version = "0.1.0"
+description = "AI agent that triages HPC/GPU incidents"
+requires-python = ">=3.12"
+dependencies = ["requests>=2.31"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["clustermedic*"]
+
+[tool.pytest.ini_options]
+markers = ["live: needs the running Docker stack (make up)"]
+testpaths = ["tests"]
