@@ -6,6 +6,8 @@ Everything runs locally on one laptop: a simulated Slurm cluster, a Redfish BMC 
 
 ![Alert-driven triage demo](docs/img/demo.gif)
 
+▶ [Watch the full replay](https://asciinema.org/a/pzet6onFZHdiHFob) (pause it, or copy text from it)
+
 ## What it does
 
 1. **Detects.** A Prometheus alert fires when an anomaly appears (node drained, slurmd down, GPU ECC errors, overheating, fan failure, ...).
