@@ -3,14 +3,18 @@ import argparse
 import json
 
 from .evaluate import evaluate
-from .store import BM25Retriever, VectorRetriever, build_index
+from .evaluate import HARD
+from .store import BM25Retriever, HybridRetriever, VectorRetriever, build_index
+
+KINDS = ["bm25", "vector", "hybrid"]
 
 
 def _retriever(kind: str):
     if kind == "bm25":
         return BM25Retriever()
     from .embed import OllamaEmbedder
-    return VectorRetriever(OllamaEmbedder())
+    vector = VectorRetriever(OllamaEmbedder())
+    return vector if kind == "vector" else HybridRetriever([BM25Retriever(), vector])
 
 
 def main(argv=None):
@@ -20,9 +24,10 @@ def main(argv=None):
     q = sub.add_parser("query")
     q.add_argument("text")
     q.add_argument("-k", type=int, default=3)
-    q.add_argument("--retriever", choices=["vector", "bm25"], default="vector")
+    q.add_argument("--retriever", choices=KINDS, default="hybrid")
     e = sub.add_parser("eval")
-    e.add_argument("--retriever", choices=["vector", "bm25", "both"], default="both")
+    e.add_argument("--retriever", choices=KINDS + ["all"], default="all")
+    e.add_argument("--hard", action="store_true", help="use the harder question set")
     a = p.parse_args(argv)
 
     if a.cmd == "index":
@@ -32,9 +37,10 @@ def main(argv=None):
         for r in _retriever(a.retriever).search(a.text, k=a.k):
             print(f"{r['score']:>8}  {r['id']}")
     else:
-        kinds = ["bm25", "vector"] if a.retriever == "both" else [a.retriever]
+        kinds = KINDS if a.retriever == "all" else [a.retriever]
+        print("question set:", "hard" if a.hard else "standard")
         for kind in kinds:
-            res = evaluate(_retriever(kind))
+            res = evaluate(_retriever(kind), **({"questions": HARD} if a.hard else {}))
             print(f"{kind:>6}: n={res['n']}  hit@1={res['hit@1']:.2f}  "
                   f"hit@3={res['hit@3']:.2f}  MRR={res['mrr']:.3f}")
             for m in res["misses"]:

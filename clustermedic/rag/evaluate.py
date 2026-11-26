@@ -5,6 +5,7 @@ from pathlib import Path
 from .store import REPO
 
 QUESTIONS = REPO / "eval/retrieval_questions.jsonl"
+HARD = REPO / "eval/retrieval_questions_hard.jsonl"
 
 
 def runbook_rank(results: list[dict], expected: str) -> int | None:

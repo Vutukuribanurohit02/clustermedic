@@ -1,0 +1,10 @@
+{"question": "node went idle* right after someone changed the time on it", "expected": "RB-004"}
+{"question": "Xid 74 keeps appearing in the kernel log on a multi-GPU node", "expected": "RB-008"}
+{"question": "single-bit memory errors on one GPU have been creeping up all week", "expected": "RB-007"}
+{"question": "after a reboot one node can no longer use jumbo frames", "expected": "RB-009"}
+{"question": "cancelled jobs never actually die on c2 and now the node is out of the pool", "expected": "RB-001"}
+{"question": "core files from crashing simulations are piling up in scratch", "expected": "RB-002"}
+{"question": "fans look fine but the BMC says CPU1 is above its critical threshold", "expected": "RB-006"}
+{"question": "a job asks for more GPUs than any node has and never starts", "expected": "RB-010"}
+{"question": "one GPU runs 15 degrees hotter than the others in the same box", "expected": "RB-006"}
+{"question": "redundancy lost event in the BMC log and one fan reads far below its twin", "expected": "RB-005"}

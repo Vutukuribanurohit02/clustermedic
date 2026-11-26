@@ -49,3 +49,25 @@ class BM25Retriever:
         scored = sorted(zip(self.bm25.scores(query), self.chunks), key=lambda x: -x[0])[:k]
         return [{"id": c.id, "runbook": c.runbook, "section": c.section,
                  "score": round(s, 4), "text": c.text} for s, c in scored]
+
+
+class HybridRetriever:
+    """Reciprocal Rank Fusion: score(chunk) = sum over retrievers of 1 / (k_rrf + rank).
+
+    A chunk ranked high by either retriever rises to the top, so keyword search covers exact
+    strings (log lines, error codes) and embeddings cover paraphrases.
+    """
+
+    def __init__(self, retrievers: list, k_rrf: int = 60, depth: int = 20):
+        self.retrievers, self.k_rrf, self.depth = retrievers, k_rrf, depth
+
+    def search(self, query: str, k: int = 5) -> list[dict]:
+        fused: dict[str, dict] = {}
+        for r in self.retrievers:
+            for rank, hit in enumerate(r.search(query, k=self.depth), start=1):
+                entry = fused.setdefault(hit["id"], {**hit, "score": 0.0})
+                entry["score"] += 1 / (self.k_rrf + rank)
+        out = sorted(fused.values(), key=lambda h: -h["score"])[:k]
+        for h in out:
+            h["score"] = round(h["score"], 4)
+        return out

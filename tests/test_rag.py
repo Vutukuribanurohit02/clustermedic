@@ -58,3 +58,21 @@ def test_runbook_rank_dedupes():
 def test_bm25_baseline_runs_on_question_set():
     res = evaluate(BM25Retriever())
     assert res["n"] == 20 and 0 <= res["hit@1"] <= 1
+
+
+class _Fake:
+    def __init__(self, order):
+        self.order = order
+
+    def search(self, query, k=5):
+        return [{"id": i, "runbook": i.split("#")[0], "section": "", "score": 0, "text": ""}
+                for i in self.order[:k]]
+
+
+def test_hybrid_rrf_rewards_agreement_and_covers_blind_spots():
+    from clustermedic.rag.store import HybridRetriever
+    a = _Fake(["RB-001#x", "RB-002#x", "RB-003#x"])
+    b = _Fake(["RB-003#x", "RB-002#x", "RB-009#x"])
+    ids = [h["id"] for h in HybridRetriever([a, b]).search("q", k=4)]
+    assert set(ids[:2]) == {"RB-002#x", "RB-003#x"}   # found by both retrievers -> top
+    assert set(ids) == {"RB-001#x", "RB-002#x", "RB-003#x", "RB-009#x"}
