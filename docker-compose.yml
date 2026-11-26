@@ -53,6 +53,7 @@ services:
     container_name: grafana
     volumes:
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports: ["3000:3000"]
     networks: [clusternet]
     depends_on: [prometheus]
