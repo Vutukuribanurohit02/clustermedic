@@ -1,0 +1,17 @@
+groups:
+  - name: clustermedic
+    rules:
+      - alert: ClusterAnomaly
+        expr: clustermedic_anomalies > 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Health checks report {{ $value }} anomaly line(s)"
+      - alert: ClusterMedicDown
+        expr: up{job="clustermedic"} == 0
+        for: 1m
+        labels:
+          severity: info
+        annotations:
+          summary: "The ClusterMedic service is not being scraped"

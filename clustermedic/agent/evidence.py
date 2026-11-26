@@ -59,6 +59,8 @@ def anomalies(ev: dict) -> list[str]:
     for r in ev.get("nvlink_errors", []):
         out.append(f"{_gpu(r)} NVLink CRC errors in 2m: {r['value']:.0f}")
     for r in ev.get("targets_down", []):
+        if r.get("job") == "clustermedic":   # our own exporter; not a cluster fault
+            continue
         out.append(f"monitoring target down: {r.get('job')} ({r.get('instance')})")
     for chassis, t in ev.get("bmc_thermal", {}).items():
         for f in t["fans"]:

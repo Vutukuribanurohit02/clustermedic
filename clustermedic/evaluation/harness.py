@@ -72,7 +72,11 @@ def run_one(graph, item: dict, idx: int) -> dict:
     fault, node, gpu = item["fault"], item["node"], item["gpu"]
     row = {"i": idx, **item, "expected": expected_for(fault, node, gpu)}
     if not wait_quiet():
-        row["error"] = "cluster did not become quiet before injection"
+        try:
+            blocking = evidence.anomalies(evidence.gather())
+        except Exception as e:
+            blocking = [f"(could not read anomalies: {e})"]
+        row["error"] = f"cluster did not become quiet before injection; blocking: {blocking}"
         return row
     try:
         if fault:
@@ -82,7 +86,7 @@ def run_one(graph, item: dict, idx: int) -> dict:
                 row["error"] = "symptom never appeared"
                 return row
         before = executed_count()
-        state = graph.invoke({"ticket": "", "dry_run": True},
+        state = graph.invoke({"ticket": "", "dry_run": True, "source": "eval"},
                              {"configurable": {"thread_id": f"eval-{idx}"}})
         row.update({
             "anomalies": state["anomalies"],
@@ -112,13 +116,25 @@ def run(per_fault: int = 3, healthy: int = 3, seed: int = 7) -> Path:
     started = datetime.now(timezone.utc)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     stem = OUT_DIR / f"run-{started:%Y%m%d-%H%M%S}"
-    items = plan(per_fault, healthy, seed)
-    log(f"{len(items)} incidents planned; results -> {stem}.jsonl")
+    log(f"{len(plan(per_fault, healthy, seed))} incidents planned; results -> {stem}.jsonl")
 
+    flag = OUT_DIR / ".running"           # tells the alert service to stand down
+    flag.touch()
+    try:
+        return _run(per_fault, healthy, seed, started, stem)
+    finally:
+        flag.unlink(missing_ok=True)
+
+
+def _run(per_fault, healthy, seed, started, stem):
+    from clustermedic.agent.graph import build_graph
+    from clustermedic.rag.__main__ import _retriever
+    items = plan(per_fault, healthy, seed)
     faults_cli("clear", "--all")          # start clean
     graph = build_graph(retriever=_retriever("hybrid"))
     log("warming up the model (excluded from timings)")
-    graph.invoke({"ticket": "warm-up", "dry_run": True}, {"configurable": {"thread_id": "warm"}})
+    graph.invoke({"ticket": "warm-up", "dry_run": True, "source": "eval"},
+                 {"configurable": {"thread_id": "warm"}})
     from clustermedic.agent.diagnose import diagnose_llm
     diagnose_llm("", ["node c1 state drain, reason 'warm-up'"], [])
 

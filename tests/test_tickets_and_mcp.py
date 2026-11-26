@@ -27,6 +27,7 @@ def test_graph_posts_ticket_and_closes_on_verified(monkeypatch, tmp_path):
                         actions.Action("resume_node", "resume", True, lambda t: None, lambda t: True, "node"))
     monkeypatch.setattr(tickets, "open_issue", lambda t, b: calls.append(("open", t)) or {"number": 3, "url": "u"})
     monkeypatch.setattr(tickets, "close", lambda n, reason="completed": calls.append(("close", n)))
+    monkeypatch.setattr(tickets, "comment", lambda n, b: calls.append(("comment", n)))
 
     class R:
         def search(self, q, k=4):
@@ -38,7 +39,9 @@ def test_graph_posts_ticket_and_closes_on_verified(monkeypatch, tmp_path):
     pending = g.pending_approval(graph, cfg)
     assert pending["injection"]                         # flagged and shown to the human
     state = graph.invoke(Command(resume=True), cfg)
-    assert ("close", 3) in calls and calls[0][0] == "open"
+    # issue opened when the fix is proposed (visible while awaiting approval), then the
+    # handover is posted as a comment and the issue closed once the fix is verified
+    assert [c[0] for c in calls] == ["open", "comment", "close"] and ("close", 3) in calls
     assert "Warning:" in state["summary"] and "act_s" in state["timings"]
 
 

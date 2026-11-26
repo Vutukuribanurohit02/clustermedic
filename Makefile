@@ -1,5 +1,5 @@
 .RECIPEPREFIX = >
-.PHONY: up down status health logs
+.PHONY: up down status health logs serve test
 
 up:        ## start Slurm first (it owns the network), then our stack
 > $(MAKE) -C infra/slurm up
@@ -18,3 +18,9 @@ health:
 
 logs:
 > docker compose logs -f --tail=50
+
+serve:     ## alert-driven agent service (metrics on :9500, Alertmanager webhook, approvals)
+> python -m clustermedic.serve --github
+
+test:
+> pytest -m "not live" -q

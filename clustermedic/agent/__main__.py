@@ -18,7 +18,13 @@ def main(argv=None):
     r.add_argument("--issue", type=int, help="take the ticket text from this GitHub issue")
     r.add_argument("--github", action="store_true", help="open a GitHub issue for this incident")
     sub.add_parser("injection-eval", help="run the injection tickets against the current fault")
+    sub.add_parser("pending", help="list alert incidents waiting for approval (service must run)")
+    ap = sub.add_parser("approve", help="approve or deny a pending alert incident")
+    ap.add_argument("id")
+    ap.add_argument("--deny", action="store_true")
     a = p.parse_args(argv)
+    if a.cmd in ("pending", "approve"):
+        return service_call(a)
     if a.cmd == "run":
         return run(a.ticket, a.dry_run, a.issue, a.github)
     if a.cmd == "injection-eval":
@@ -43,6 +49,30 @@ def main(argv=None):
     print("rules baseline:", diagnose_rules(found))
     print("LLM diagnosis:")
     print(json.dumps(diagnose_llm(a.ticket, found, chunks), indent=2))
+
+
+def service_call(a) -> None:
+    import requests
+
+    from clustermedic.serve import TOKEN_FILE
+    headers = {"X-ClusterMedic-Token": TOKEN_FILE.read_text().strip()}
+    base = "http://localhost:9500"
+    if a.cmd == "pending":
+        items = requests.get(f"{base}/pending", headers=headers, timeout=10).json()
+        if not items:
+            print("no incidents waiting for approval")
+        for iid, it in items.items():
+            print(f"{iid}  [{it['created']}]  {it['root_cause']} -> {it['action']} {it['target']}  "
+                  f"(confidence {it['confidence']}, grounded {it['grounded']})")
+            print(f"    {it['reasoning']}")
+            if it.get("ticket_url"):
+                print(f"    ticket: {it['ticket_url']}")
+            print(f"    approve: python -m clustermedic.agent approve {iid}   "
+                  f"deny: python -m clustermedic.agent approve {iid} --deny")
+        return
+    r = requests.post(f"{base}/approve", headers=headers, timeout=120,
+                      json={"id": a.id, "approve": not a.deny})
+    print(r.json())
 
 
 def run(ticket: str, dry_run: bool, issue: int | None = None, github: bool = False) -> None:

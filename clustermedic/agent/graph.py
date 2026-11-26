@@ -24,6 +24,8 @@ class State(TypedDict, total=False):
     github: bool        # open/update a GitHub issue for this incident
     injection: list[str]
     ticket_url: str
+    source: str         # "cli", "alert" or "eval"
+    outcome: str
     anomalies: list[str]
     chunks: list[dict]
     diagnosis: dict
@@ -78,7 +80,33 @@ def diagnose_node(state: State) -> dict:
 def propose_node(state: State) -> dict:
     p = actions.propose(state["diagnosis"], state["anomalies"])
     actions.audit("proposed", **p, root_cause=state["diagnosis"]["root_cause"])
-    return {"proposal": p}
+    out = {"proposal": p}
+    # Alert-driven runs: open the ticket now, so the pending approval is visible in GitHub.
+    if (state.get("github") and p["requires_approval"] and not state.get("dry_run")
+            and not state.get("issue")):
+        out.update(_open_pending_ticket(state, p))
+    return out
+
+
+def _open_pending_ticket(state: State, p: dict) -> dict:
+    from clustermedic import tickets
+    d = state["diagnosis"]
+    body = mask_secrets("\n".join([
+        "**Status:** awaiting human approval",
+        "**Anomalies:**", *[f"- {a}" for a in state["anomalies"]],
+        f"**Diagnosis:** {d['root_cause']} on {p['target']} (confidence {d['confidence']}, "
+        f"grounded {d['grounded']}, runbook {d['runbook']})",
+        f"**Reasoning:** {d['reasoning']}",
+        f"**Proposed action:** {p['action']}: {p['description']}",
+        "Approve or deny on the ClusterMedic host: `python -m clustermedic.agent pending`",
+    ]))
+    try:
+        opened = tickets.open_issue(f"[ClusterMedic] {d['root_cause']} on {p['target']}", body)
+        actions.audit("ticket_opened", issue=opened["number"])
+        return {"issue": opened["number"], "ticket_url": opened["url"]}
+    except Exception as e:
+        actions.audit("ticket_error", error=str(e))
+        return {}
 
 
 def route_after_propose(state: State) -> str:
@@ -140,10 +168,24 @@ def summarize_node(state: State) -> dict:
     summary = mask_secrets("\n".join(lines))
     INCIDENTS.mkdir(parents=True, exist_ok=True)
     (INCIDENTS / f"{datetime.now(timezone.utc):%Y%m%d-%H%M%S}.md").write_text(summary + "\n")
-    out = {"summary": summary}
+    _record(state, outcome)
+    out = {"summary": summary, "outcome": outcome}
     if not state.get("dry_run") and (state.get("issue") or state.get("github")):
         out.update(_post_ticket(state, summary, outcome))
     return out
+
+
+def _record(state: State, outcome: str) -> None:
+    """One JSON line per incident: the source for KPI history."""
+    import json
+    d, p = state["diagnosis"], state["proposal"]
+    rec = {"ts": datetime.now(timezone.utc).isoformat(), "root_cause": d["root_cause"],
+           "target": p["target"], "action": p["action"], "outcome": outcome,
+           "needs_review": d.get("needs_review"), "grounded": d.get("grounded"),
+           "dry_run": bool(state.get("dry_run")), "source": state.get("source", "cli"),
+           "injection": bool(state.get("injection")), "timings": state.get("timings", {})}
+    with (INCIDENTS.parent / "incidents.jsonl").open("a") as f:
+        f.write(json.dumps(rec) + "\n")
 
 
 def _post_ticket(state: State, summary: str, outcome: str) -> dict:

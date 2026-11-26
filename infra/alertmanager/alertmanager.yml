@@ -1,0 +1,16 @@
+route:
+  receiver: clustermedic
+  group_by: ["alertname"]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+  routes:
+    - matchers: ['alertname="ClusterMedicDown"']
+      receiver: "null"          # don't ask the agent to diagnose its own absence
+
+receivers:
+  - name: clustermedic
+    webhook_configs:
+      - url: http://host.docker.internal:9500/alert
+        send_resolved: true
+  - name: "null"
