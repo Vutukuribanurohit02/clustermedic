@@ -900,7 +900,8 @@
           "fields": "",
           "values": false
         }
-      }
+      },
+      "description": "Share of real incidents (eval runs excluded) where the proposed action hands the work to a human instead of an automated fix: escalate_hardware, report_only or drain_for_repair. Drain is counted because it only parks the node until someone repairs it."
     },
     {
       "id": 16,

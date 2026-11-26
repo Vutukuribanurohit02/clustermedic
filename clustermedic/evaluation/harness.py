@@ -4,6 +4,7 @@ fault, wait until its symptom is visible, run the agent in DRY RUN, score, clear
 The agent never sees the ground truth: faults are injected through the injector CLI, and the
 agent only observes the cluster.
 """
+from contextlib import contextmanager
 import json
 import random
 import subprocess
@@ -109,6 +110,20 @@ def run_one(graph, item: dict, idx: int) -> dict:
     return row
 
 
+@contextmanager
+def eval_running():
+    """Tell the alert service to stand down. Only the outermost caller removes the flag."""
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    flag = OUT_DIR / ".running"
+    created = not flag.exists()
+    flag.touch()
+    try:
+        yield
+    finally:
+        if created:
+            flag.unlink(missing_ok=True)
+
+
 def run(per_fault: int = 3, healthy: int = 3, seed: int = 7) -> Path:
     from clustermedic.agent.graph import build_graph
     from clustermedic.rag.__main__ import _retriever
@@ -118,12 +133,8 @@ def run(per_fault: int = 3, healthy: int = 3, seed: int = 7) -> Path:
     stem = OUT_DIR / f"run-{started:%Y%m%d-%H%M%S}"
     log(f"{len(plan(per_fault, healthy, seed))} incidents planned; results -> {stem}.jsonl")
 
-    flag = OUT_DIR / ".running"           # tells the alert service to stand down
-    flag.touch()
-    try:
+    with eval_running():
         return _run(per_fault, healthy, seed, started, stem)
-    finally:
-        flag.unlink(missing_ok=True)
 
 
 def _run(per_fault, healthy, seed, started, stem):

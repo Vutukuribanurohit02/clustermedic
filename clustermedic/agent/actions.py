@@ -65,6 +65,9 @@ def refresh_node_map() -> dict:
 # ---------- action implementations ----------
 
 def _resume(target):
+    if _healthy(target):          # already in service: approving twice is a no-op
+        audit("action_noop", action="resume_node", target=target, state=_node_state(target))
+        return
     _run(["docker", "exec", SLURM_CTL, "scontrol", "update", f"nodename={target}", "state=resume"])
 
 
@@ -75,6 +78,9 @@ def _healthy(target):
 
 def _drain(target, reason="ClusterMedic: hardware fault, awaiting repair"):
     node = target.split(":")[0]
+    if _drained(target):          # keep the original drain reason; don't overwrite it
+        audit("action_noop", action="drain_for_repair", target=node, state=_node_state(node))
+        return
     _run(["docker", "exec", SLURM_CTL, "scontrol", "update", f"nodename={node}",
           "state=drain", f"reason={reason}"])
 

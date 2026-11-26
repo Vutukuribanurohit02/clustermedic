@@ -33,6 +33,12 @@ def model_size_gb(name: str) -> float | None:
 
 
 def run(models: list[str], incidents_per_fault: int = 0) -> Path:
+    from .harness import eval_running
+    with eval_running():          # fault injections here must not open real tickets
+        return _run(models, incidents_per_fault)
+
+
+def _run(models: list[str], incidents_per_fault: int = 0) -> Path:
     from clustermedic.rag.__main__ import _retriever
     have = installed_models()
     missing = [m for m in models if m not in have]
