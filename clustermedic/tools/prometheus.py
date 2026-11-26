@@ -37,7 +37,7 @@ def gpu_hot(threshold_c: float = 85) -> list[dict]:
 
 def gpu_new_dbe(window: str = "15m") -> list[dict]:
     """GPUs with new uncorrectable (double-bit) ECC errors in the window."""
-    if window not in {"5m", "15m", "1h", "24h"}:
+    if window not in {"2m", "5m", "15m", "1h", "24h"}:
         raise ToolError(f"unsupported window: {window}")
     return prom_query(f"increase(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL[{window}]) > 0")
 

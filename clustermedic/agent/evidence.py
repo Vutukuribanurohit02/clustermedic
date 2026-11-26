@@ -13,10 +13,10 @@ CHECKS = {
     "pending_jobs": lambda: slurm.squeue_jobs(state="PD"),
     "gpu_hot": lambda: prom.gpu_hot(GPU_TEMP_WARN_C),
     "gpu_xid": prom.gpu_xid,
-    "gpu_new_dbe": lambda: prom.gpu_new_dbe("5m"),
-    "gpu_new_sbe": lambda: prom.prom_query("increase(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL[5m]) > 0"),
+    "gpu_new_dbe": lambda: prom.gpu_new_dbe("2m"),
+    "gpu_new_sbe": lambda: prom.prom_query("increase(DCGM_FI_DEV_ECC_SBE_VOL_TOTAL[2m]) > 0"),
     "nvlink_errors": lambda: prom.prom_query(
-        "increase(DCGM_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_TOTAL[5m]) > 0"),
+        "increase(DCGM_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_TOTAL[2m]) > 0"),
     "targets_down": prom.targets_down,
     "bmc_thermal": lambda: {c: redfish.thermal(c) for c in redfish.chassis_list()},
 }
@@ -53,11 +53,11 @@ def anomalies(ev: dict) -> list[str]:
     for r in ev.get("gpu_xid", []):
         out.append(f"{_gpu(r)} last Xid error {int(r['value'])}")
     for r in ev.get("gpu_new_dbe", []):
-        out.append(f"{_gpu(r)} new double-bit (uncorrectable) ECC errors in 5m: {r['value']:.0f}")
+        out.append(f"{_gpu(r)} new double-bit (uncorrectable) ECC errors in 2m: {r['value']:.0f}")
     for r in ev.get("gpu_new_sbe", []):
-        out.append(f"{_gpu(r)} new single-bit ECC errors in 5m: {r['value']:.0f}")
+        out.append(f"{_gpu(r)} new single-bit ECC errors in 2m: {r['value']:.0f}")
     for r in ev.get("nvlink_errors", []):
-        out.append(f"{_gpu(r)} NVLink CRC errors in 5m: {r['value']:.0f}")
+        out.append(f"{_gpu(r)} NVLink CRC errors in 2m: {r['value']:.0f}")
     for r in ev.get("targets_down", []):
         out.append(f"monitoring target down: {r.get('job')} ({r.get('instance')})")
     for chassis, t in ev.get("bmc_thermal", {}).items():
