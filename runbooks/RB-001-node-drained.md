@@ -8,6 +8,7 @@ destructive_actions: [scontrol_resume]
 ---
 
 ## Symptoms
+- Users report cancelled jobs will not die: processes keep running after scancel, then the node drops out of the pool.
 - `sinfo` shows a node as `drain`, `drng` (draining) or `down`; jobs stay PENDING with reason `Resources`.
 - Health check: "slurm nodes healthy" FAIL.
 
