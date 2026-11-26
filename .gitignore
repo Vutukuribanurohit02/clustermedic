@@ -4,3 +4,6 @@ __pycache__/
 .env
 infra/gpu-exporter/state/
 *.egg-info/
+eval/.active_faults.json
+infra/redfish/mockups/
+*.json.orig

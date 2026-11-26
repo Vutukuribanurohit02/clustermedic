@@ -22,7 +22,11 @@ def _status(item: dict) -> tuple[str | None, str | None]:
 
 
 def parse_thermal(doc: dict) -> dict:
-    """Normalise a Redfish Thermal resource into temperatures and fans."""
+    """Normalise a Redfish Thermal resource into temperatures and fans.
+
+    `reporting` is True only for an enabled sensor with a value. A Disabled or Absent
+    sensor with no reading is not a failure (e.g. an empty CPU socket).
+    """
     temps, fans = [], []
     for t in doc.get("Temperatures", []):
         health, state = _status(t)
@@ -33,6 +37,7 @@ def parse_thermal(doc: dict) -> dict:
             "health": health,
             "state": state,
             "absent": state == "Absent",
+            "reporting": state == "Enabled" and t.get("ReadingCelsius") is not None,
         })
     for f in doc.get("Fans", []):
         health, state = _status(f)
@@ -43,6 +48,7 @@ def parse_thermal(doc: dict) -> dict:
             "health": health,
             "state": state,
             "absent": state == "Absent",
+            "reporting": state == "Enabled" and f.get("Reading") is not None,
         })
     return {"temperatures": temps, "fans": fans}
 

@@ -4,7 +4,9 @@ services:
   redfish:
     image: dmtf/redfish-mockup-server:latest
     container_name: redfish
-    command: ["-H", "0.0.0.0", "-p", "8000"]
+    command: ["-H", "0.0.0.0", "-p", "8000", "-D", "/mockup"]
+    volumes:
+      - ./infra/redfish/mockups/public-rackmount1:/mockup
     ports: ["8000:8000"]
     networks: [clusternet]
     restart: unless-stopped

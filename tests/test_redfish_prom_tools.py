@@ -10,6 +10,7 @@ THERMAL_DOC = {
         {"Name": "CPU1 Temp", "ReadingCelsius": 41, "UpperThresholdCritical": 90,
          "Status": {"State": "Enabled", "Health": "OK"}},
         {"Name": "CPU2 Temp", "ReadingCelsius": None, "Status": {"State": "Absent"}},
+        {"Name": "CPU3 Temp", "ReadingCelsius": None, "Status": {"State": "Disabled"}},
     ],
     "Fans": [
         {"Name": "BaseBoard System Fan", "Reading": 2100, "ReadingUnits": "RPM",
@@ -22,8 +23,12 @@ def test_parse_thermal_marks_absent_sensor():
     t = parse_thermal(THERMAL_DOC)
     assert t["temperatures"][0]["celsius"] == 41 and t["temperatures"][0]["absent"] is False
     assert t["temperatures"][1]["celsius"] is None and t["temperatures"][1]["absent"] is True
+    assert t["temperatures"][0]["reporting"] is True
+    # Disabled with no reading (as in the DMTF mockup's CPU2): not reporting, not a fault
+    assert t["temperatures"][2]["reporting"] is False and t["temperatures"][2]["absent"] is False
     assert t["fans"][0] == {"name": "BaseBoard System Fan", "reading": 2100, "units": "RPM",
-                            "health": "OK", "state": "Enabled", "absent": False}
+                            "health": "OK", "state": "Enabled", "absent": False,
+                            "reporting": True}
 
 
 def test_parse_vector():
