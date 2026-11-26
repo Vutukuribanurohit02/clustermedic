@@ -78,3 +78,8 @@ LLM adds value over rules.
 | **all** | 22 | 22 | 13 |
 
 State-changing actions proposed: 0 (expected 0: ticket-only diagnoses are always needs_review -> report_only)
+Interpretation: tickets pre-registered (committed before the run). On structured monitoring
+evidence the rules baseline ties the LLM (32/32 each); on paraphrased free-text tickets with no
+keywords the LLM got 9/9 and rules 0/9, with 0/4 false alarms on benign tickets. Caveats: small n;
+tickets and runbooks written by the same author; output is a triage hint (needs_review,
+report_only), never an automated action. Next: a held-out set written by someone else.
