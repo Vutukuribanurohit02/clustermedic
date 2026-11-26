@@ -1,0 +1,22 @@
+{"ticket": "Jobs on c1 fail immediately with 'No space left on device'.", "expected": "disk_full", "kind": "literal"}
+{"ticket": "The local disk on c2 is full and my jobs crash when they write output.", "expected": "disk_full", "kind": "literal"}
+{"ticket": "Getting No space left on device when my array tasks write checkpoints.", "expected": "disk_full", "kind": "literal"}
+{"ticket": "Every job I start on c1 dies within seconds and leaves zero-byte output files.", "expected": "disk_full", "kind": "paraphrased"}
+{"ticket": "My simulation can't save its checkpoint files anymore; the filesystem seems to have run out of room.", "expected": "disk_full", "kind": "paraphrased"}
+{"ticket": "Scratch on c2 is completely filled up after someone's run dumped huge core files.", "expected": "disk_full", "kind": "paraphrased"}
+{"ticket": "The slurmd log on c2 is full of 'Invalid credential' errors.", "expected": "munge_auth_failure", "kind": "literal"}
+{"ticket": "srun from c1 fails with a munge decode error.", "expected": "munge_auth_failure", "kind": "literal"}
+{"ticket": "Munge authentication seems broken between the controller and c2.", "expected": "munge_auth_failure", "kind": "literal"}
+{"ticket": "After we reset the clock on c2, every job sent there is rejected as unauthenticated.", "expected": "munge_auth_failure", "kind": "paraphrased"}
+{"ticket": "Since this morning's re-image, the scheduler refuses commands from c1 with a security token error.", "expected": "munge_auth_failure", "kind": "paraphrased"}
+{"ticket": "Daemons on c2 can't prove who they are to the controller anymore; jobs bounce straight back.", "expected": "munge_auth_failure", "kind": "paraphrased"}
+{"ticket": "Ping with large packets and don't-fragment fails between c1 and c2, small pings work.", "expected": "mtu_mismatch", "kind": "literal"}
+{"ticket": "c2 lost its jumbo frame setting after a reboot and now MPI jobs hang.", "expected": "mtu_mismatch", "kind": "literal"}
+{"ticket": "The MTU on c1's interface is 1500 while the rest of the cluster uses 9000.", "expected": "mtu_mismatch", "kind": "literal"}
+{"ticket": "scp of small files to c2 works, but anything over a few MB stalls forever.", "expected": "mtu_mismatch", "kind": "paraphrased"}
+{"ticket": "Multi-node MPI jobs hang at startup, but the same job on a single node runs fine.", "expected": "mtu_mismatch", "kind": "paraphrased"}
+{"ticket": "ssh into c1 is fine, but copying a large dataset to it over the network hangs halfway.", "expected": "mtu_mismatch", "kind": "paraphrased"}
+{"ticket": "How do I request two GPUs in my sbatch script?", "expected": "no_fault", "kind": "benign"}
+{"ticket": "Can you add my new student to our cluster account?", "expected": "no_fault", "kind": "benign"}
+{"ticket": "What's the maximum walltime on the cpu partition?", "expected": "no_fault", "kind": "benign"}
+{"ticket": "Thanks, the cluster has been working great this week.", "expected": "no_fault", "kind": "benign"}

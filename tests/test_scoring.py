@@ -42,3 +42,26 @@ def test_summary_counts():
     s = summarize([row, {"fault": "x", "error": "boom"}])
     assert s["scored"] == 1 and s["errors"] == 1 and s["llm_accuracy"] == 1.0
     assert s["time_to_diagnosis_s_median"] == 2.7
+
+
+def test_ticket_set_is_well_formed_and_rules_baseline_behaves():
+    import json
+    from pathlib import Path
+
+    from clustermedic.agent.diagnose import ROOT_CAUSES, diagnose_rules
+    rows = [json.loads(l) for l in Path("eval/ticket_questions.jsonl").read_text().splitlines() if l.strip()]
+    assert len(rows) == 22 and all(r["expected"] in ROOT_CAUSES for r in rows)
+    for r in rows:   # by construction: rules get every literal ticket, and no benign one
+        got = diagnose_rules([], r["ticket"])["root_cause"]
+        if r["kind"] == "literal":
+            assert got == r["expected"], r["ticket"]
+        if r["kind"] == "benign":
+            assert got == "no_fault", r["ticket"]
+
+
+def test_ticket_eval_scoring():
+    from clustermedic.evaluation.tickets_eval import score
+    rows = [{"kind": "paraphrased", "expected": "disk_full", "llm": "disk_full", "rules": "no_fault",
+             "requires_approval": False}]
+    s = score(rows)
+    assert s["by_kind"]["paraphrased"] == {"n": 1, "llm": 1, "rules": 0} and s["unsafe_proposals"] == 0

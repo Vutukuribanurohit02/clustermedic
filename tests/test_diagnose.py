@@ -6,9 +6,23 @@ def test_schema_enum_matches_runbook_map():
     assert d.SCHEMA["properties"]["root_cause"]["enum"] == list(d.ROOT_CAUSES)
 
 
-def test_no_anomalies_skips_llm(monkeypatch):
+def test_no_anomalies_and_no_ticket_skips_llm(monkeypatch):
     monkeypatch.setattr(d, "chat_json", lambda *a, **k: (_ for _ in ()).throw(AssertionError))
-    assert d.diagnose_llm("users say it's slow", [], [])["root_cause"] == "no_fault"
+    assert d.diagnose_llm("", [], [])["root_cause"] == "no_fault"
+
+
+def test_ticket_only_diagnosis_is_never_trusted(monkeypatch):
+    monkeypatch.setattr(d, "chat_json", lambda *a, **k: {
+        "root_cause": "disk_full", "target": "c1", "confidence": 0.9, "evidence": [], "reasoning": "x"})
+    out = d.diagnose_llm("jobs die with zero-byte output", [], [])
+    assert out["ticket_only"] and not out["grounded"] and out["needs_review"] and out["confidence"] <= 0.3
+    from clustermedic.agent.actions import propose
+    assert propose(out, [])["action"] == "report_only"
+
+
+def test_rules_fall_back_to_ticket_only_without_anomalies():
+    assert d.diagnose_rules([], "No space left on device")["root_cause"] == "disk_full"
+    assert d.diagnose_rules(["node c2 state drain, reason 'x'"], "disk is full")["root_cause"] == "node_drained"
 
 
 def test_ticket_is_fenced_as_data():

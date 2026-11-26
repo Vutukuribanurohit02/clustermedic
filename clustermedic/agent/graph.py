@@ -71,7 +71,7 @@ def retrieve_node(state: State, retriever=None) -> dict:
 
 def diagnose_node(state: State) -> dict:
     d = diagnose.diagnose_llm(state.get("ticket", ""), state["anomalies"], state["chunks"])
-    return {"diagnosis": d, "rules": diagnose.diagnose_rules(state["anomalies"]),
+    return {"diagnosis": d, "rules": diagnose.diagnose_rules(state["anomalies"], state.get("ticket", "")),
             "timings": {**state.get("timings", {}), "diagnose_s": d["seconds"]}}
 
 
