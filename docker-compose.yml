@@ -16,6 +16,15 @@ services:
     networks: [clusternet]
     restart: unless-stopped
 
+  gpu-exporter:
+    build: ./infra/gpu-exporter
+    container_name: gpu-exporter
+    volumes:
+      - ./infra/gpu-exporter/state:/state
+    ports: ["9400:9400"]
+    networks: [clusternet]
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
