@@ -41,8 +41,8 @@ class VectorRetriever:
 
 
 class BM25Retriever:
-    def __init__(self, runbooks: Path = RUNBOOKS):
-        self.chunks = chunk_dir(runbooks)
+    def __init__(self, runbooks: Path = RUNBOOKS, pattern: str = "RB-*.md"):
+        self.chunks = chunk_dir(runbooks, pattern)
         self.bm25 = BM25([c.text for c in self.chunks])
 
     def search(self, query: str, k: int = 5) -> list[dict]:

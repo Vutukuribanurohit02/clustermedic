@@ -59,8 +59,8 @@ def chunk_runbook(path: Path) -> list[Chunk]:
     return chunks
 
 
-def chunk_dir(directory: Path) -> list[Chunk]:
+def chunk_dir(directory: Path, pattern: str = "RB-*.md") -> list[Chunk]:
     out = []
-    for p in sorted(Path(directory).glob("RB-*.md")):
+    for p in sorted(Path(directory).glob(pattern)):
         out.extend(chunk_runbook(p))
     return out

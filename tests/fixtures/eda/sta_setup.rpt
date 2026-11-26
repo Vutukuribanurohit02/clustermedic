@@ -1,0 +1,43 @@
+==========================================================================
+finish report_checks -path_delay max
+--------------------------------------------------------------------------
+Startpoint: _692_ (rising edge-triggered flip-flop clocked by core_clock)
+Endpoint: _704_ (rising edge-triggered flip-flop clocked by core_clock)
+Path Group: core_clock
+Path Type: max
+
+Fanout     Cap    Slew   Delay    Time   Description
+-----------------------------------------------------------------------------
+                          0.00    0.00   clock core_clock (rise edge)
+                          0.00    0.00   clock source latency
+                  0.10    0.06    0.06 ^ clkbuf_0_clk/X (sky130_fd_sc_hd__clkbuf_16)
+                  0.08    0.21    0.27 ^ _692_/CLK (sky130_fd_sc_hd__dfxtp_1)
+                  0.09    0.35    0.62 ^ _692_/Q (sky130_fd_sc_hd__dfxtp_1)
+    18    0.04                           req_msg[3] (net)
+                  0.22    0.30    0.92 v _401_/Y (sky130_fd_sc_hd__nand2_1)
+     2    0.01                           _120_ (net)
+                  0.18    0.25    1.17 ^ _402_/X (sky130_fd_sc_hd__a21o_1)
+                  0.15    0.22    1.39 v _403_/Y (sky130_fd_sc_hd__xnor2_1)
+                  0.12    0.20    1.59 ^ _404_/X (sky130_fd_sc_hd__a31o_2)
+                  0.07    0.04    1.63 ^ _704_/D (sky130_fd_sc_hd__dfxtp_1)
+                                  1.63   data arrival time
+
+                          1.50    1.50   clock core_clock (rise edge)
+                          0.27    1.77   clock network delay (propagated)
+                         -0.12    1.65   library setup time
+                                  1.20   data required time
+-----------------------------------------------------------------------------
+                                  1.20   data required time
+                                 -1.63   data arrival time
+-----------------------------------------------------------------------------
+                                 -0.43   slack (VIOLATED)
+
+==========================================================================
+finish report_tns
+--------------------------------------------------------------------------
+tns -6.21
+
+==========================================================================
+finish report_wns
+--------------------------------------------------------------------------
+wns -0.43

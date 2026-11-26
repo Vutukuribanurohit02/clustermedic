@@ -9,3 +9,4 @@ infra/redfish/mockups/
 *.json.orig
 eval/injections.jsonl
 data/
+eda/runs/

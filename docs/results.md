@@ -93,3 +93,15 @@ Interpretation: qwen2.5:7b and llama3.1:8b tie on triage (22/22); the 1-ticket i
 (2/8 vs 1/8) is within noise at n=8. qwen2.5:3b is ~40% faster but raised false alarms on 2/4 benign
 tickets and missed 2/9 paraphrases. Unsafe proposals were 0 for every model: safety comes from the
 grounding check and action allowlist, not from model choice.
+
+## EDA triage (OpenROAD-flow-scripts gcd/sky130hd + Yosys RTL runs, n = 8)
+
+| Version | LLM (qwen2.5:7b) | Rules | Ungrounded LLM answers |
+|---|---|---|---|
+| v1: any "Latch inferred" warning counts as a latch | 4/8 | 5/8 | 0 |
+| v2: latch must appear as cells in the synthesis statistics | 8/8 | 8/8 | 0 |
+
+- **What failed in v1:** Yosys warns "Latch inferred" on gcd.v (do_sub/do_swap) and on its own han-carlson.v adder, but synth_stat.txt has 0 latch cells, so the latches were optimized away. The latch rule ranks above timing, so it hid real setup violations in gcd_tight and gcd_tighter (3 VIOLATED paths each).
+- **The fix:** latch warnings are checked against the cell statistics. Delay cells (dlygate) and clock-gating cells (dlclkp) are excluded. A warning with 0 latch cells becomes an informational note, never a root cause.
+- **Caveats:** v2 was written after seeing the v1 results on the same 8 runs, so the score shows the fix works, not how well it generalizes. n = 8 is small, and the RTL bugs were seeded on purpose.
+- Writing the tests also caught a double-count: Yosys prints its statistics twice (16 counted instead of 8).

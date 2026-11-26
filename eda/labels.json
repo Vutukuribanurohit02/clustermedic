@@ -1,0 +1,10 @@
+{
+  "gcd_relaxed": "no_issue",
+  "gcd_tight": "setup_violation",
+  "gcd_tighter": "setup_violation",
+  "gcd_dense": "placement_density",
+  "rtl_clean": "no_issue",
+  "rtl_latch": "latch_inferred",
+  "rtl_undriven": "undriven_net",
+  "rtl_multidriver": "multiple_drivers"
+}

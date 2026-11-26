@@ -1,0 +1,12 @@
+Startpoint: _692_ (rising edge-triggered flip-flop clocked by core_clock)
+Endpoint: _704_ (rising edge-triggered flip-flop clocked by core_clock)
+Path Group: core_clock
+Path Type: max
+
+                                  1.63   data arrival time
+                                  9.70   data required time
+-----------------------------------------------------------------------------
+                                  8.07   slack (MET)
+
+tns 0.00
+wns 0.00

@@ -1,0 +1,13 @@
+  Startpoint: u_uart/tx_reg_3_
+               (rising edge-triggered flip-flop clocked by pclk)
+  Endpoint: u_uart/baud_cnt_reg_7_
+               (rising edge-triggered flip-flop clocked by pclk)
+  Path Group: pclk
+  Path Type: max
+
+  Point                                    Incr       Path
+  -----------------------------------------------------------
+  data arrival time                                   10.42
+  data required time                                   9.88
+  -----------------------------------------------------------
+  slack (VIOLATED)                                    -0.54

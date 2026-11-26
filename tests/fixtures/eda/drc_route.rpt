@@ -1,0 +1,9 @@
+violation type: Short
+	srcs: net25 net26
+	bbox = ( 10.5, 20.3 ) - ( 10.7, 20.5 ) on Layer met1
+violation type: Short
+	srcs: net31 net32
+	bbox = ( 40.1, 22.0 ) - ( 40.3, 22.2 ) on Layer met1
+violation type: Metal Spacing
+	srcs: net40 net41
+	bbox = ( 15.0, 30.0 ) - ( 15.1, 30.2 ) on Layer met2
