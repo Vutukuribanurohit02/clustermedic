@@ -12,8 +12,9 @@ class Fault:
     root_cause: str        # ground-truth label the agent's diagnosis is scored against
     runbook: str           # runbook that should be retrieved
     description: str
-    inject: Callable[[dict], dict]   # ctx -> undo info
+    inject: Callable[[dict], dict]   # ctx -> undo info (must return quickly)
     clear: Callable[[dict], None]    # undo info -> None
+    settle: Callable[[dict], None] | None = None  # optional: wait until the symptom is visible
 
 
 # ----- Slurm faults -----
@@ -28,11 +29,14 @@ def _resume(u):
 def _slurmd_down(ctx):
     c = b.container_for_node(ctx["node"])
     b.sh(["docker", "stop", c])
+    return {"node": ctx["node"], "container": c}
+
+
+def _slurmd_settle(ctx):
     # Slurm only flags the node ("idle*") after it misses heartbeats; measured ~1.5 min here.
     # Wait so the symptom exists before anyone starts diagnosing.
-    b.wait_for(lambda: b.slurm_admin("sinfo", "-h", "-n", ctx["node"], "-o", "%t").endswith("*"),
+    b.wait_for(lambda: b.node_state(ctx["node"]).endswith("*"),
                timeout_s=360, what=f"{ctx['node']} to show as not responding")
-    return {"node": ctx["node"], "container": c}
 
 def _slurmd_up(u):
     b.sh(["docker", "start", u["container"]])
@@ -88,7 +92,8 @@ FAULTS: dict[str, Fault] = {f.name: f for f in [
     Fault("node_drain", "node", "node_drained", "RB-001",
           "Drain a node with a realistic reason", _drain, _resume),
     Fault("slurmd_down", "node", "slurmd_down", "RB-003",
-          "Stop a worker container so slurmd stops responding", _slurmd_down, _slurmd_up),
+          "Stop a worker container so slurmd stops responding", _slurmd_down, _slurmd_up,
+          settle=_slurmd_settle),
     Fault("jobs_pending", "node", "jobs_pending", "RB-010",
           "A long exclusive job holds both nodes; a new job waits on Resources", _saturate, _cancel),
     Fault("gpu_overheat", "gpu", "overheat", "RB-006",

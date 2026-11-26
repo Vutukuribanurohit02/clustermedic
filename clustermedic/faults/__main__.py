@@ -4,7 +4,7 @@ import json
 import secrets
 from datetime import datetime, timezone
 
-from .backends import REPO
+from .backends import REPO, node_state
 from .registry import FAULTS
 
 LOG = REPO / "eval/injections.jsonl"          # ground truth (append-only)
@@ -27,9 +27,19 @@ def cmd_list(_):
 
 def cmd_inject(a):
     f = FAULTS[a.fault]
+    if _active():
+        raise SystemExit("a fault is already active; run `clear --all` first (one fault at a time)")
+    if f.target == "node":
+        state = node_state(a.node)
+        if state not in {"idle", "mix", "alloc"}:
+            raise SystemExit(f"{a.node} is already unhealthy ({state}); fix it before injecting")
     ctx = {"node": a.node, "gpu": a.gpu}
     undo = f.inject(ctx)
     fid = f"inj-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}-{secrets.token_hex(2)}"
+    # Record immediately, so an interrupted settle step can still be cleared.
+    active = _active()
+    active[fid] = {"fault": f.name, "undo": undo}
+    _save_active(active)
     record = {"id": fid, "ts": datetime.now(timezone.utc).isoformat(), "fault": f.name,
               "target": f.target, "node": a.node if f.target != "bmc" else "bmc",
               "gpu": a.gpu if f.target == "gpu" else None,
@@ -37,9 +47,9 @@ def cmd_inject(a):
     LOG.parent.mkdir(parents=True, exist_ok=True)
     with LOG.open("a") as fh:
         fh.write(json.dumps(record) + "\n")
-    active = _active()
-    active[fid] = {"fault": f.name, "undo": undo}
-    _save_active(active)
+    if f.settle:
+        print(f"injected {f.name} -> {fid}; waiting for the symptom to appear...", flush=True)
+        f.settle(ctx)
     print(f"injected {f.name} -> {fid}")
 
 

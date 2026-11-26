@@ -41,24 +41,30 @@ def slurm_admin(*args: str) -> str:
     return sh(["docker", "exec", SLURM_CTL, *args])
 
 
-def container_for_node(node: str) -> str:
-    """Find the worker container behind a Slurm node (e.g. c1 -> slurm-cpu-worker-1).
+def node_state(node: str) -> str:
+    """Compact Slurm state, e.g. 'idle', 'drain', 'idle*' ('*' = not responding)."""
+    return slurm_admin("sinfo", "-h", "-n", node, "-o", "%t")
 
-    Slurm's NodeAddr/NodeHostName may be an IP, a container name or a container hostname,
-    so match on any of those.
+
+def container_for_node(node: str) -> str:
+    """Find the running worker container behind a Slurm node.
+
+    Worker hostnames are container IDs, so the reliable link is Slurm's NodeAddr (an IP)
+    matched against *running* containers. A stopped container has no IP, which is why
+    node faults refuse to start on a node that is already unhealthy.
     """
     info = slurm_admin("scontrol", "show", "node", node, "-o")
     wanted = {node}
     for field in info.split():
         if field.startswith(("NodeAddr=", "NodeHostName=")):
             wanted.add(field.split("=", 1)[1])
-    for name in sh(["docker", "ps", "-a", "--format", "{{.Names}}"]).splitlines():
+    for name in sh(["docker", "ps", "--format", "{{.Names}}"]).splitlines():
         ids = sh(["docker", "inspect", "-f",
                   "{{.Config.Hostname}} {{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}",
                   name], check=False).split()
         if wanted & ({name} | set(ids)):
             return name
-    raise InjectError(f"no container found for node {node!r} (looked for {sorted(wanted)})")
+    raise InjectError(f"no running container found for node {node!r} (looked for {sorted(wanted)})")
 
 
 # ---------- GPU exporter state file ----------
