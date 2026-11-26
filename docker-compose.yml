@@ -1,0 +1,16 @@
+name: clustermedic
+
+services:
+  redfish:
+    image: dmtf/redfish-mockup-server:latest
+    container_name: redfish
+    command: ["-H", "0.0.0.0", "-p", "8000"]
+    ports:
+      - "8000:8000"
+    networks: [clusternet]
+    restart: unless-stopped
+
+networks:
+  clusternet:
+    name: slurm_slurm-network
+    external: true
