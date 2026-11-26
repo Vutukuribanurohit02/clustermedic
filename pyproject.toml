@@ -3,7 +3,7 @@ name = "clustermedic"
 version = "0.1.0"
 description = "AI agent that triages HPC/GPU incidents"
 requires-python = ">=3.12"
-dependencies = ["requests>=2.31", "chromadb>=0.5"]
+dependencies = ["requests>=2.31", "chromadb>=0.5", "langgraph>=0.2.60"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]

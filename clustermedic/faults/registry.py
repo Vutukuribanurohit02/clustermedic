@@ -24,7 +24,9 @@ def _drain(ctx):
     return {"node": ctx["node"]}
 
 def _resume(u):
-    b.slurm_admin("scontrol", "update", f"nodename={u['node']}", "state=resume")
+    # The agent may already have resumed the node; that's fine.
+    b.sh(["docker", "exec", b.SLURM_CTL, "scontrol", "update", f"nodename={u['node']}",
+          "state=resume"], check=False)
 
 def _slurmd_down(ctx):
     c = b.container_for_node(ctx["node"])

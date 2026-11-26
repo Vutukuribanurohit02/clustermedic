@@ -12,7 +12,12 @@ def main(argv=None):
     e.add_argument("--json", action="store_true", help="also print the raw evidence")
     d = sub.add_parser("diagnose", help="evidence + retrieval + LLM diagnosis")
     d.add_argument("ticket", nargs="?", default="", help="ticket text (optional)")
+    r = sub.add_parser("run", help="full triage: diagnose, propose, ask approval, act, summarize")
+    r.add_argument("ticket", nargs="?", default="")
+    r.add_argument("--dry-run", action="store_true", help="diagnose and propose only; never act")
     a = p.parse_args(argv)
+    if a.cmd == "run":
+        return run(a.ticket, a.dry_run)
 
     ev = gather()
     found = anomalies(ev)
@@ -33,6 +38,34 @@ def main(argv=None):
     print("rules baseline:", diagnose_rules(found))
     print("LLM diagnosis:")
     print(json.dumps(diagnose_llm(a.ticket, found, chunks), indent=2))
+
+
+def run(ticket: str, dry_run: bool) -> None:
+    import uuid
+
+    from langgraph.types import Command
+
+    from .actions import refresh_node_map
+    from .graph import build_graph, pending_approval
+
+    try:
+        refresh_node_map()   # lab-only bookkeeping so a dead node can be restarted later
+    except Exception as e:
+        print(f"(node map refresh skipped: {e})")
+    graph = build_graph()
+    config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    state = graph.invoke({"ticket": ticket, "dry_run": dry_run}, config)
+    pending = pending_approval(graph, config)
+    while pending:
+        d, p = pending["diagnosis"], pending["proposal"]
+        print(f"\nDIAGNOSIS: {d['root_cause']} on {p['target']}  "
+              f"(confidence {d['confidence']}, grounded {d['grounded']})")
+        print(f"REASONING: {d['reasoning']}")
+        print(f"PROPOSED:  {p['action']} -> {p['target']}\n           {p['description']}")
+        answer = input("Approve this action? [y/N] ").strip().lower() == "y"
+        state = graph.invoke(Command(resume=answer), config)
+        pending = pending_approval(graph, config)
+    print("\n" + state["summary"])
 
 
 if __name__ == "__main__":
