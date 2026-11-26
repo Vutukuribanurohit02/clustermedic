@@ -1,0 +1,3 @@
+[submodule "infra/slurm"]
+	path = infra/slurm
+	url = https://github.com/giovtorres/slurm-docker-cluster.git
