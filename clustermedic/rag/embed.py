@@ -16,7 +16,7 @@ class OllamaEmbedder:
         self.doc_prefix, self.query_prefix = _PREFIX.get(model.split(":")[0], ("", ""))
 
     def _embed(self, texts: list[str]) -> list[list[float]]:
-        r = requests.post(f"{self.url}/api/embed", json={"model": self.model, "input": texts}, timeout=120)
+        r = requests.post(f"{self.url}/api/embed", json={"model": self.model, "input": texts, "keep_alive": "30m"}, timeout=120)
         r.raise_for_status()
         return r.json()["embeddings"]
 

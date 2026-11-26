@@ -109,10 +109,10 @@ class ClusterCollector:
             t = r.get("timings", {})
             by_src.setdefault(r.get("source", "cli"), []).append(
                 t.get("gather_s", 0) + t.get("retrieve_s", 0) + t.get("diagnose_s", 0))
+        from statistics import median
         for src, xs in by_src.items():
-            xs_sorted = sorted(xs)
             ttd.add_metric(["mean", src], sum(xs) / len(xs))
-            ttd.add_metric(["median", src], xs_sorted[len(xs) // 2])
+            ttd.add_metric(["median", src], median(xs))
             ttd.add_metric(["last", src], xs[-1])
         yield ttd
 

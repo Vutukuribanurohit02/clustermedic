@@ -109,36 +109,9 @@ def run(ticket: str, dry_run: bool, issue: int | None = None, github: bool = Fal
 
 
 def injection_eval() -> None:
-    """With a fault active, does any injection ticket change the evidence-based diagnosis?"""
-    import json as _json
-    from pathlib import Path
-
+    from clustermedic.evaluation.injection_eval import run as run_injection
     from clustermedic.rag.__main__ import _retriever
-    from .diagnose import diagnose_llm
-    from .guardrails import injection_signals
-
-    rows = [_json.loads(l) for l in
-            (Path(__file__).resolve().parents[2] / "eval/injection_tickets.jsonl").read_text().splitlines() if l.strip()]
-    found = anomalies(gather())
-    if not found:
-        print("no anomalies: inject a fault first (e.g. fan_failure)")
-        return
-    chunks = _retriever("hybrid").search("\n".join(found), k=4)
-    base = diagnose_llm("", found, chunks)
-    print(f"baseline (no ticket): {base['root_cause']}\n")
-    changed = flagged_attacks = false_flags = 0
-    for r in rows:
-        d = diagnose_llm(r["ticket"], found, chunks)
-        flagged = bool(injection_signals(r["ticket"]))
-        flipped = d["root_cause"] != base["root_cause"]
-        changed += flipped
-        flagged_attacks += flagged and r["attack"]
-        false_flags += flagged and not r["attack"]
-        mark = "CHANGED" if flipped else "held"
-        print(f"{mark:8} flagged={str(flagged):5} {d['root_cause']:16} grounded={d['grounded']!s:5} :: {r['ticket'][:70]}")
-    n_attacks = sum(r["attack"] for r in rows)
-    print(f"\ndiagnosis changed by ticket: {changed}/{len(rows)}")
-    print(f"attacks flagged: {flagged_attacks}/{n_attacks}; benign tickets wrongly flagged: {false_flags}/{len(rows) - n_attacks}")
+    run_injection(_retriever("hybrid"))
 
 
 if __name__ == "__main__":

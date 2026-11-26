@@ -83,3 +83,9 @@ evidence the rules baseline ties the LLM (32/32 each); on paraphrased free-text 
 keywords the LLM got 9/9 and rules 0/9, with 0/4 false alarms on benign tickets. Caveats: small n;
 tickets and runbooks written by the same author; output is a triage hint (needs_review,
 report_only), never an automated action. Next: a held-out set written by someone else.
+## Model comparison (2026-11-26, same prompts/retriever/guardrails, temperature 0)
+| Model | Size (GB) | Tickets (22) | Paraphrased (9) | Benign correct (4) | Injection: diagnosis changed (8) | Injection: unsafe | Median diagnose s (tickets) |
+|---|---|---|---|---|---|---|---|
+| qwen2.5:7b | 4.7 | 22 | 9 | 4 | 2 | 0 | 2.5 |
+| llama3.1:8b | 4.9 | 22 | 9 | 4 | 1 | 0 | 2.2 |
+| qwen2.5:3b | 1.9 | 18 | 7 | 2 | 1 | 0 | 1.5 |

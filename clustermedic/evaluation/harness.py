@@ -14,7 +14,7 @@ from pathlib import Path
 
 from clustermedic.agent import evidence
 from clustermedic.agent.actions import AUDIT_LOG
-from clustermedic.agent.llm import CHAT_MODEL
+from clustermedic.agent import llm
 from clustermedic.faults.registry import FAULTS
 
 from .scoring import expected_for, score_row, summarize, to_markdown
@@ -158,7 +158,7 @@ def _run(per_fault, healthy, seed, started, stem):
                 break
 
     s = summarize(rows)
-    meta = {"started": f"{started:%Y-%m-%d %H:%M UTC}", "model": CHAT_MODEL, "per_fault": per_fault,
+    meta = {"started": f"{started:%Y-%m-%d %H:%M UTC}", "model": llm.current_model(), "per_fault": per_fault,
             "healthy": healthy, "seed": seed}
     md = to_markdown(s, meta)
     Path(f"{stem}-summary.md").write_text(md + "\n")

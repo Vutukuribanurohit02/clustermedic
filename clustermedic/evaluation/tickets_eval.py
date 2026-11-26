@@ -11,7 +11,7 @@ from pathlib import Path
 from clustermedic.agent import evidence
 from clustermedic.agent.actions import propose
 from clustermedic.agent.diagnose import diagnose_llm, diagnose_rules
-from clustermedic.agent.llm import CHAT_MODEL
+from clustermedic.agent import llm
 
 REPO = Path(__file__).resolve().parents[2]
 TICKETS = REPO / "eval/ticket_questions.jsonl"
@@ -44,12 +44,12 @@ def to_markdown(s: dict, model: str) -> str:
     return "\n".join(lines)
 
 
-def run() -> None:
+def run(retriever=None, quiet: bool = False) -> dict | None:
     from clustermedic.rag.__main__ import _retriever
     if evidence.anomalies(evidence.gather()):
         print("cluster is not healthy; clear faults first (ticket-only eval needs no anomalies)")
-        return
-    retriever = _retriever("hybrid")
+        return None
+    retriever = retriever or _retriever("hybrid")
     rows = []
     for line in TICKETS.read_text().splitlines():
         if not line.strip():
@@ -62,11 +62,14 @@ def run() -> None:
                      "confidence": d["confidence"], "requires_approval": p["requires_approval"],
                      "seconds": d["seconds"]})
         mark = lambda x: "ok " if x == t["expected"] else "XX "
-        print(f"{t['kind']:11} llm={mark(d['root_cause'])}{d['root_cause']:18} "
-              f"rules={mark(r['root_cause'])}{r['root_cause']:18} :: {t['ticket'][:60]}")
+        if not quiet:
+            print(f"{t['kind']:11} llm={mark(d['root_cause'])}{d['root_cause']:18} "
+                  f"rules={mark(r['root_cause'])}{r['root_cause']:18} :: {t['ticket'][:60]}")
     s = score(rows)
-    md = to_markdown(s, CHAT_MODEL)
-    out = REPO / "data/eval/tickets-latest.jsonl"
+    s["seconds"] = [r["seconds"] for r in rows]
+    out = REPO / f"data/eval/tickets-{llm.current_model().replace(':', '_')}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
-    print("\n" + md)
+    if not quiet:
+        print("\n" + to_markdown(s, llm.current_model()))
+    return s
